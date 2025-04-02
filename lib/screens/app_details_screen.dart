@@ -6,7 +6,13 @@ import 'package:device_apps/device_apps.dart';
 
 class AppDetailsScreen extends StatelessWidget {
   final AppInfo app;
-  const AppDetailsScreen({super.key, required this.app});
+  final VoidCallback onUninstallSuccess;
+
+  const AppDetailsScreen({
+    super.key,
+    required this.app,
+    required this.onUninstallSuccess,
+  });
 
   Future<void> _showUninstallDialog(BuildContext context) async {
     return showDialog(
@@ -40,6 +46,7 @@ class AppDetailsScreen extends StatelessWidget {
 
 
                   if (result) {
+                    onUninstallSuccess(); // Call the callback
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(

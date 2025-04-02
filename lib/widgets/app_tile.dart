@@ -4,7 +4,9 @@ import '../screens/app_details_screen.dart';
 
 class AppTile extends StatelessWidget {
   final AppInfo app;
-  const AppTile({super.key, required this.app});
+  final VoidCallback onUninstallSuccess;
+  final VoidCallback onTap;
+  const AppTile({super.key, required this.app, required this.onUninstallSuccess, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +23,7 @@ class AppTile extends StatelessWidget {
       onTap:
           () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (context) => AppDetailsScreen(app: app)),
+            MaterialPageRoute(builder: (context) => AppDetailsScreen(app: app, onUninstallSuccess: onUninstallSuccess,)),
           ),
     );
   }

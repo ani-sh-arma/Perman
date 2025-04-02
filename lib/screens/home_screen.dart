@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:perman/screens/app_details_screen.dart';
 import '../services/app_service.dart';
 import '../widgets/app_tile.dart';
 
@@ -13,6 +14,10 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final AppService _appService = AppService();
 
+  final TextEditingController _searchController = TextEditingController();
+  bool _showSystemApps = false;
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
@@ -20,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _loadApps() async {
-    await _appService.fetchInstalledApps();
+    await _appService.fetchInstalledApps(includeSystemApps: _showSystemApps);
     setState(() {});
 
     for (final app in _appService.installedApps) {
@@ -33,18 +38,109 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Perman')),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          _loadApps();
-        },
-        child: ListView.builder(
-          itemCount: _appService.installedApps.length,
-          itemBuilder: (context, index) {
-            final app = _appService.installedApps[index];
-            return AppTile(app: app);
-          },
-        ),
+      appBar: AppBar(
+        title: const Text('PerMan'),
+        actions: [
+          IconButton(
+            icon: Icon(
+              _showSystemApps ? Icons.android : Icons.android_outlined,
+              color: _showSystemApps ? Theme.of(context).primaryColor : null,
+            ),
+            onPressed: () {
+              setState(() {
+                _showSystemApps = !_showSystemApps;
+                _appService.fetchInstalledApps(
+                  includeSystemApps: _showSystemApps,
+                );
+              });
+            },
+            tooltip: 'Toggle System Apps',
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Search apps...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: Theme.of(context).cardColor,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.toLowerCase();
+                });
+              },
+            ),
+          ),
+          Expanded(
+            child: FutureBuilder<void>(
+              future: _appService.fetchInstalledApps(
+                includeSystemApps: _showSystemApps,
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final filteredApps =
+                    _appService.installedApps
+                        .where(
+                          (app) =>
+                              app.name.toLowerCase().contains(_searchQuery) ||
+                              app.packageName.toLowerCase().contains(
+                                _searchQuery,
+                              ),
+                        )
+                        .toList();
+
+                return ListView.builder(
+                  itemCount: filteredApps.length,
+                  itemBuilder: (context, index) {
+                    final app = filteredApps[index];
+                    return AppTile(
+                      app: app,
+                      onUninstallSuccess: () {
+                        setState(() {
+                          _appService.fetchInstalledApps(
+                            includeSystemApps: _showSystemApps,
+                          );
+                        });
+                      },
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => AppDetailsScreen(
+                                  app: app,
+                                  onUninstallSuccess: () {
+                                    setState(() {
+                                      _appService.fetchInstalledApps(
+                                        includeSystemApps: _showSystemApps,
+                                      );
+                                    });
+                                  },
+                                ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -5,21 +5,19 @@ import 'package:flutter/services.dart';
 class AppService {
   List<AppInfo> installedApps = [];
 
-  Future<void> fetchInstalledApps() async {
+  Future<void> fetchInstalledApps({bool includeSystemApps = false}) async {
     try {
       List<Application> apps = await DeviceApps.getInstalledApplications(
-        includeSystemApps: true,
+        includeSystemApps: includeSystemApps,
         onlyAppsWithLaunchIntent: true,
         includeAppIcons: true,
       );
-
-      // Filter out system apps that start with "com.android." or "android"
-      apps =
-          apps.where((app) {
-            final package = app.packageName.toLowerCase();
-            return !package.startsWith('com.android.') &&
-                !package.startsWith('android');
-          }).toList();
+      // apps =
+      //     apps.where((app) {
+      //       final package = app.packageName.toLowerCase();
+      //       return !package.startsWith('com.android.') &&
+      //           !package.startsWith('android');
+      //     }).toList();
 
       print('Number of apps fetched by DeviceApps: ${apps.length}');
 

@@ -34,12 +34,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Perman')),
-      body: ListView.builder(
-        itemCount: _appService.installedApps.length,
-        itemBuilder: (context, index) {
-          final app = _appService.installedApps[index];
-          return AppTile(app: app);
+      body: RefreshIndicator(
+        onRefresh: () async {
+          _loadApps();
         },
+        child: ListView.builder(
+          itemCount: _appService.installedApps.length,
+          itemBuilder: (context, index) {
+            final app = _appService.installedApps[index];
+            return AppTile(app: app);
+          },
+        ),
       ),
     );
   }

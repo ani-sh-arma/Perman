@@ -1,10 +1,72 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import '../models/app_info.dart';
 import '../widgets/risk_indicator.dart';
+import 'package:device_apps/device_apps.dart';
 
 class AppDetailsScreen extends StatelessWidget {
   final AppInfo app;
   const AppDetailsScreen({super.key, required this.app});
+
+  Future<void> _showUninstallDialog(BuildContext context) async {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Uninstall App'),
+          content: Text('Are you sure you want to uninstall ${app.name}?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () async {
+                Navigator.of(context).pop();
+
+                // Show loading dialog
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (BuildContext context) {
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                );
+
+                try {
+                  final result = await DeviceApps.uninstallApp(app.packageName);
+                  log("Result : $result");
+                  Navigator.of(context).pop();
+
+
+                  if (result) {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Failed to uninstall app'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  Navigator.of(context).pop(); // Dismiss loading dialog
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${e.toString()}'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.red),
+              child: const Text('Uninstall'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +78,23 @@ class AppDetailsScreen extends StatelessWidget {
         app.permissions.where((p) => p['risk'] == 'Low').toList();
 
     return Scaffold(
-      appBar: AppBar(title: Text(app.name), elevation: 0),
+      appBar: AppBar(
+        title: Text(app.name),
+        elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () {
+              DeviceApps.openAppSettings(app.packageName);
+            },
+            icon: const Icon(Icons.settings),
+          ),
+          IconButton(
+            onPressed: () => _showUninstallDialog(context),
+            icon: const Icon(Icons.delete, color: Colors.red),
+          ),
+          const SizedBox(width: 8),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -77,6 +155,7 @@ class AppDetailsScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

@@ -5,9 +5,10 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+
 android {
     namespace = "com.example.perman"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34
     ndkVersion = "27.0.12077973"
 
     compileOptions {

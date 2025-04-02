@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:device_apps/device_apps.dart';
 import '../models/app_info.dart';
 import 'package:flutter/services.dart';
@@ -7,9 +9,10 @@ class AppService {
 
   Future<void> fetchInstalledApps({bool includeSystemApps = false}) async {
     try {
+      log("System APPS : $includeSystemApps");
       List<Application> apps = await DeviceApps.getInstalledApplications(
         includeSystemApps: includeSystemApps,
-        onlyAppsWithLaunchIntent: true,
+        onlyAppsWithLaunchIntent: false,
         includeAppIcons: true,
       );
       // apps =

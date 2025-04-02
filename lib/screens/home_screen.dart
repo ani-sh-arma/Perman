@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:perman/screens/app_details_screen.dart';
+import 'package:perman/utils/debouncer.dart';
 import '../services/app_service.dart';
 import '../widgets/app_tile.dart';
 
@@ -13,10 +14,17 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final AppService _appService = AppService();
-
   final TextEditingController _searchController = TextEditingController();
+  final Debouncer _debouncer = Debouncer();
   bool _showSystemApps = false;
   String _searchQuery = '';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _debouncer.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -76,8 +84,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
               ),
               onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.toLowerCase();
+                _debouncer(() {
+                  setState(() {
+                    _searchQuery = value.toLowerCase();
+                  });
                 });
               },
             ),
